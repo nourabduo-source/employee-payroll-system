@@ -1,1 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>نظام إدارة الموظفين والرواتب</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Tahoma, sans-serif;
+      background: #f4f6f9;
+      color: #222;
+    }
+
+    .container {
+      width: 94%;
+      max-width: 1200px;
+      margin: 25px auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 15px rgba(0,0,0,.07);
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+
+    .login-box {
+      max-width: 430px;
+      margin: 70px auto;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 15px;
+    }
+
+    button {
+      background: #1769aa;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: .9;
+    }
+
+    .danger {
+      background: #c62828;
+    }
+
+    .success {
+      background: #2e7d32;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 3px 15px rgba(0,0,0,.06);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 30px;
+      margin-top: 8px;
+      color: #1769aa;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 750px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #eee;
+      padding: 12px;
+      text-align: right;
+    }
+
+    th {
+      background: #f1f5f9;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .topbar button {
+      width: auto;
+      min-width: 120px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .form-grid button {
+      grid-column: 1 / -1;
+    }
+
+    .small-btn {
+      width: auto;
+      padding: 8px 12px;
+      margin: 0 3px;
+    }
+
+    @media (max-width: 700px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        width: 96%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- تسجيل الدخول -->
+  <div id="loginSection" class="container">
+
+    <div class="card login-box">
+
+      <h1>نظام إدارة الموظفين والرواتب</h1>
+
+      <p>تسجيل الدخول إلى النظام</p>
+
+      <label>البريد الإلكتروني</label>
+      <input
+        type="email"
+        id="email"
+        placeholder="البريد الإلكتروني"
+      >
+
+      <label>كلمة المرور</label
