@@ -190,4 +190,535 @@
         placeholder="البريد الإلكتروني"
       >
 
-      <label>كلمة المرور</label
+      <label>كلمة المرور</label>
+      <input
+        type="password"
+        id="password"
+        placeholder="كلمة المرور"
+      >
+
+      <button onclick="login()">دخول</button>
+
+      <div id="loginMessage"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- النظام -->
+  <div id="appSection" class="container hidden">
+
+    <div class="card">
+
+      <div class="topbar">
+
+        <div>
+          <h1>نظام إدارة الموظفين والرواتب</h1>
+          <p>إدارة الموظفين والرواتب والبيانات الأساسية</p>
+        </div>
+
+        <button class="danger" onclick="logout()">
+          تسجيل الخروج
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- الإحصائيات -->
+    <div class="stats">
+
+      <div class="stat">
+        إجمالي الموظفين
+        <strong id="totalEmployees">0</strong>
+      </div>
+
+      <div class="stat">
+        الموظفون النشطون
+        <strong id="activeEmployees">0</strong>
+      </div>
+
+      <div class="stat">
+        إجمالي الرواتب
+        <strong id="totalSalaries">0</strong>
+      </div>
+
+    </div>
+
+
+    <!-- إضافة موظف -->
+    <div class="card">
+
+      <h2>إضافة موظف جديد</h2>
+
+      <div class="form-grid">
+
+        <div>
+          <label>كود الموظف</label>
+          <input
+            type="text"
+            id="employeeCode"
+            placeholder="مثال: EMP001"
+          >
+        </div>
+
+        <div>
+          <label>اسم الموظف</label>
+          <input
+            type="text"
+            id="fullName"
+            placeholder="اسم الموظف بالكامل"
+          >
+        </div>
+
+        <div>
+          <label>رقم الهاتف</label>
+          <input
+            type="text"
+            id="phone"
+            placeholder="رقم الهاتف"
+          >
+        </div>
+
+        <div>
+          <label>الوظيفة</label>
+          <input
+            type="text"
+            id="position"
+            placeholder="الوظيفة"
+          >
+        </div>
+
+        <div>
+          <label>الراتب الأساسي</label>
+          <input
+            type="number"
+            id="baseSalary"
+            placeholder="0"
+            min="0"
+          >
+        </div>
+
+        <div>
+          <label>نوع الراتب</label>
+
+          <select id="salaryType">
+
+            <option value="monthly">
+              شهري
+            </option>
+
+            <option value="daily">
+              يومي
+            </option>
+
+          </select>
+
+        </div>
+
+        <button class="success" onclick="addEmployee()">
+          إضافة الموظف
+        </button>
+
+      </div>
+
+      <div id="employeeMessage"></div>
+
+    </div>
+
+
+    <!-- الموظفون -->
+    <div class="card">
+
+      <h2>قائمة الموظفين</h2>
+
+      <div class="table-wrap">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>الكود</th>
+              <th>الاسم</th>
+              <th>الهاتف</th>
+              <th>الوظيفة</th>
+              <th>الراتب</th>
+              <th>النوع</th>
+              <th>الحالة</th>
+            </tr>
+
+          </thead>
+
+          <tbody id="employeesTable">
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+<script>
+
+  /*
+    بيانات Supabase
+    مهم:
+    ضع رابط مشروعك كما هو.
+    ضع Publishable Key الخاص بك في السطر الثاني.
+  */
+
+  const SUPABASE_URL =
+    "https://sjaukvrcumqclzviekak.supabase.co";
+
+  const SUPABASE_ANON_KEY =
+    "sb_publishable_MrmqsrapN-bcyMoayGi1mQ_sw1HiE61;
+
+
+  let db = null;
+
+
+  // تشغيل Supabase
+  function initializeSupabase() {
+
+    if (!window.supabase) {
+
+      showLoginMessage(
+        "مكتبة Supabase لم يتم تحميلها."
+      );
+
+      return false;
+    }
+
+    if (
+      !SUPABASE_URL ||
+      !SUPABASE_ANON_KEY ||
+      SUPABASE_ANON_KEY.includes("ضع-Publishable")
+    ) {
+
+      showLoginMessage(
+        "بيانات Supabase غير مكتملة."
+      );
+
+      return false;
+    }
+
+    try {
+
+      db = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+      return true;
+
+    } catch (error) {
+
+      showLoginMessage(
+        "تعذر تشغيل Supabase: " + error.message
+      );
+
+      return false;
+    }
+  }
+
+
+  // رسالة تسجيل الدخول
+  function showLoginMessage(message) {
+
+    document.getElementById("loginMessage").innerHTML =
+      '<div class="message">' + message + '</div>';
+  }
+
+
+  // رسالة الموظفين
+  function showEmployeeMessage(message) {
+
+    document.getElementById("employeeMessage").innerHTML =
+      '<div class="message">' + message + '</div>';
+  }
+
+
+  // تسجيل الدخول
+  async function login() {
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    if (!email || !password) {
+
+      showLoginMessage(
+        "اكتب البريد الإلكتروني وكلمة المرور."
+      );
+
+      return;
+    }
+
+    if (!db) {
+
+      const ready = initializeSupabase();
+
+      if (!ready) return;
+    }
+
+    showLoginMessage("جاري تسجيل الدخول...");
+
+    const { data, error } =
+      await db.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+    if (error) {
+
+      showLoginMessage(
+        "خطأ من Supabase: " + error.message
+      );
+
+      return;
+    }
+
+    if (data && data.user) {
+
+      document
+        .getElementById("loginSection")
+        .classList.add("hidden");
+
+      document
+        .getElementById("appSection")
+        .classList.remove("hidden");
+
+      await loadEmployees();
+    }
+  }
+
+
+  // تسجيل الخروج
+  async function logout() {
+
+    if (db) {
+
+      await db.auth.signOut();
+    }
+
+    document
+      .getElementById("appSection")
+      .classList.add("hidden");
+
+    document
+      .getElementById("loginSection")
+      .classList.remove("hidden");
+
+    document.getElementById("password").value = "";
+  }
+
+
+  // تحميل الموظفين
+  async function loadEmployees() {
+
+    if (!db) return;
+
+    const { data, error } = await db
+      .from("employees")
+      .select("*")
+      .order("created_at", {
+        ascending: false
+      });
+
+    if (error) {
+
+      showEmployeeMessage(
+        "تعذر تحميل الموظفين: " + error.message
+      );
+
+      return;
+    }
+
+    renderEmployees(data || []);
+  }
+
+
+  // عرض الموظفين
+  function renderEmployees(employees) {
+
+    const table =
+      document.getElementById("employeesTable");
+
+    table.innerHTML = "";
+
+    let active = 0;
+    let salaries = 0;
+
+    employees.forEach(employee => {
+
+      if (employee.is_active) {
+        active++;
+      }
+
+      salaries += Number(employee.base_salary || 0);
+
+      const row =
+        document.createElement("tr");
+
+      row.innerHTML = `
+
+        <td>${escapeHtml(employee.employee_code || "")}</td>
+
+        <td>${escapeHtml(employee.full_name || "")}</td>
+
+        <td>${escapeHtml(employee.phone || "")}</td>
+
+        <td>${escapeHtml(employee.position || "")}</td>
+
+        <td>${Number(employee.base_salary || 0).toLocaleString("ar-EG")}</td>
+
+        <td>
+          ${
+            employee.salary_type === "daily"
+              ? "يومي"
+              : "شهري"
+          }
+        </td>
+
+        <td>
+          ${
+            employee.is_active
+              ? "نشط"
+              : "غير نشط"
+          }
+        </td>
+
+      `;
+
+      table.appendChild(row);
+    });
+
+
+    document.getElementById("totalEmployees").textContent =
+      employees.length;
+
+    document.getElementById("activeEmployees").textContent =
+      active;
+
+    document.getElementById("totalSalaries").textContent =
+      salaries.toLocaleString("ar-EG");
+  }
+
+
+  // إضافة موظف
+  async function addEmployee() {
+
+    if (!db) {
+
+      const ready = initializeSupabase();
+
+      if (!ready) return;
+    }
+
+    const employeeCode =
+      document.getElementById("employeeCode").value.trim();
+
+    const fullName =
+      document.getElementById("fullName").value.trim();
+
+    const phone =
+      document.getElementById("phone").value.trim();
+
+    const position =
+      document.getElementById("position").value.trim();
+
+    const baseSalary =
+      Number(
+        document.getElementById("baseSalary").value || 0
+      );
+
+    const salaryType =
+      document.getElementById("salaryType").value;
+
+
+    if (!employeeCode || !fullName) {
+
+      showEmployeeMessage(
+        "كود الموظف واسم الموظف مطلوبان."
+      );
+
+      return;
+    }
+
+
+    const { error } = await db
+      .from("employees")
+      .insert([
+
+        {
+          employee_code: employeeCode,
+          full_name: fullName,
+          phone: phone,
+          position: position,
+          base_salary: baseSalary,
+          salary_type: salaryType,
+          is_active: true
+        }
+
+      ]);
+
+
+    if (error) {
+
+      showEmployeeMessage(
+        "تعذر إضافة الموظف: " + error.message
+      );
+
+      return;
+    }
+
+
+    document.getElementById("employeeCode").value = "";
+    document.getElementById("fullName").value = "";
+    document.getElementById("phone").value = "";
+    document.getElementById("position").value = "";
+    document.getElementById("baseSalary").value = "";
+
+    showEmployeeMessage(
+      "تمت إضافة الموظف بنجاح."
+    );
+
+    await loadEmployees();
+  }
+
+
+  // حماية النصوص
+  function escapeHtml(value) {
+
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+
+  // تشغيل أولي
+  document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+      initializeSupabase();
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
